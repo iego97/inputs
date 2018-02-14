@@ -15,172 +15,384 @@ using namespace std;
 //Declaracion de ventana 
 GLFWwindow *window;
 GLfloat red, green, blue;
-GLfloat ty = 0.0f;
-GLfloat tx = 0.0f;
 double tiempoAnterior = 0.0;
-double velocidad = 0.7;
+double velocidadBarras = 0.7;
+double velocidadPelota = 0.7;
 
-GLfloat enemigoX = 0.0f;
-GLfloat enemigoY = 0.5f;
+GLfloat barraIzquierdaY = 0.0f;
+GLfloat barraIzquierdaX = -0.85f;
 
-GLfloat angulo = 0.0f;
+GLfloat barraDerechaX = 0.80f;
+GLfloat barraDerechaY = 0.0f;
+
+GLfloat pelotaX = 0.0f;
+GLfloat pelotaY = 0.0f;
+GLfloat anguloPelota = 0.0f;
+
+
+
+bool moviendose = true;
+bool choqueIzquierda = false;
+bool choqueSuperior = false;
+bool choqueDerecha = false;
+bool choqueInferior = false;
+
+
+
 GLfloat velocidadAngular = 180.0f;
 
-void checarColisiones()
+void checarColisionesIzquierda()
 {
-	if (tx >= enemigoX - 0.08
-		&& tx <= enemigoX + 0.08
-		&& ty >= enemigoY - 0.08
-		&& ty <= enemigoY + 0.08)
+			
+
+	
+	if (
+		   pelotaX <= barraIzquierdaX + 0.15
+		&& pelotaX >= barraIzquierdaX - 0.15
+		&& pelotaY <= barraIzquierdaY + 0.18
+		&& pelotaY >= barraIzquierdaY - 0.25
+		 )
 	{
-		exit(0);
+		moviendose = false;
+		choqueIzquierda = true;
+
+	
+		velocidadPelota += 0.02;
+		
 	}
+	
+}
+
+
+
+void checarColisionesDerecha()
+{
+
+
+
+	if (
+		   pelotaX <= barraDerechaX + 0.05
+		&& pelotaX >= barraDerechaX - 0.05
+		&& pelotaY <= barraDerechaY + 0.18
+		&& pelotaY >= barraDerechaY - 0.25
+		)
+	{
+		choqueSuperior = false;
+		choqueInferior = false;
+		choqueIzquierda = false;
+		choqueDerecha = true;
+	
+
+		velocidadPelota += 0.02;
+
+	}
+
+}
+
+void checarColisionesSuperior()
+{
+
+
+
+	if (
+		pelotaX <= 1.0
+		&& pelotaX >= -1.0
+		&& pelotaY <= 0.90
+		&& pelotaY >= 0.85
+		)
+	{
+		
+		choqueIzquierda = false;
+		choqueSuperior = true;
+
+		velocidadPelota += 0.02;
+	}
+
+}
+
+void checarColisionesInferior()
+{
+
+
+
+	if (
+		pelotaX <= 1.0
+		&& pelotaX >= -1.0
+		&& pelotaY <= -0.95
+		&& pelotaY >= -1.0
+		)
+	{
+		choqueSuperior = false;
+		choqueDerecha = false;
+
+		velocidadPelota += 0.02;
+		
+	}
+
+}
+
+
+
+
+
+
+void actualizarPelota(double tiempoTranscurrido)
+{
+	if (moviendose)
+	{
+		pelotaX -= (tiempoTranscurrido * velocidadPelota) /2 ;
+	}
+	else if (choqueIzquierda )
+	{
+
+		pelotaX += -cos((anguloPelota + 135) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+		pelotaY += sin((anguloPelota + 135) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+
+	}
+	else if (choqueDerecha)
+	{
+		pelotaX += -cos((anguloPelota + 37) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+		pelotaY += -sin((anguloPelota + 37) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+	}
+	else if (choqueSuperior)
+	{
+		pelotaX += cos((anguloPelota + 37) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+		pelotaY += -sin((anguloPelota + 37) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+	}
+	else if (choqueInferior)
+	{
+		pelotaX += -cos((anguloPelota + 67.5) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+		pelotaY += sin((anguloPelota + 67.5) * (3.14159f / 180.0f)) *
+			velocidadPelota * 1.05 * tiempoTranscurrido;
+	}
+
+
 }
 
 
 void actualizar() {
 	//Aqui esta bien para cambiar los valores de las variables de mi programa
-	/*
-	red += 0.001;
-	green += 0.002;
-	blue += 0.003;
 
-	if (red > 1) red = 0;
-	if (green > 1) green = 0;
-	if (blue > 1) blue = 0;*/
 	double tiempoActual = glfwGetTime();
 	double tiempoTranscurrido = tiempoActual - tiempoAnterior;
 
-	//ARRIBA
-	int estadoArriba = glfwGetKey(window, GLFW_KEY_UP);
+	//MOVIMIENTO PELOTA
+	
+	actualizarPelota(tiempoTranscurrido);
+	
+
+
+	//ARRIBA izquierda
+	int estadoArriba = glfwGetKey(window, GLFW_KEY_W);
 	if (estadoArriba == GLFW_PRESS)
 	{
-		/*
-		if (ty < 1)
-			ty += velocidad * tiempoTranscurrido;
-		*/
 
-		tx += cos((angulo + 90) * (3.14159f / 180.0f)) * (velocidad * tiempoTranscurrido);
-
-		ty += sin((angulo + 90) * (3.14159f / 180.0f)) * (velocidad * tiempoTranscurrido);
-			
-
-	}
-
-
-	//ABAJO
-	int estadoAbajo = glfwGetKey(window, GLFW_KEY_DOWN);
-	if (estadoAbajo == GLFW_PRESS)
-	{
-		if (ty > -1)
-			ty -= velocidad * tiempoTranscurrido;
-	}
-
-
-
-	int estadoIzquierda = glfwGetKey(window, GLFW_KEY_LEFT);
-	if (estadoIzquierda == GLFW_PRESS) {
-		angulo += velocidadAngular * tiempoTranscurrido;
-		if (angulo > 360) {
-			angulo -= 360.0f;
-		}
-	}
-
-
-	int estadoDerecha = glfwGetKey(window, GLFW_KEY_RIGHT);
-	if (estadoDerecha == GLFW_PRESS) {
-		angulo -= velocidadAngular * tiempoTranscurrido;
-		if (angulo < 0)
+		if (barraIzquierdaY < 0.75f)
 		{
-			angulo += 360.0f;
+			barraIzquierdaY += velocidadBarras * tiempoTranscurrido;
 		}
+
 	}
 
-	checarColisiones();
+
+	//ABAJO izquierda
+	int estadoAbajo = glfwGetKey(window, GLFW_KEY_S);
+	if (estadoAbajo == GLFW_PRESS)
+		if (barraIzquierdaY > -0.75f)
+		{
+			barraIzquierdaY -= velocidadBarras * tiempoTranscurrido;
+		}
+
+	//ARRIBA derecha
+	int estadoArribaDerecha = glfwGetKey(window, GLFW_KEY_UP);
+	if (estadoArribaDerecha == GLFW_PRESS)
+	{
+
+		if (barraDerechaY < 0.75f)
+		{
+			barraDerechaY += velocidadBarras * tiempoTranscurrido;
+		}
+
+	}
+
+
+	//ABAJO derecha
+	int estadoAbajoDerecha = glfwGetKey(window, GLFW_KEY_DOWN);
+	if (estadoAbajoDerecha == GLFW_PRESS)
+		if (barraDerechaY > -0.75f)
+		{
+			barraDerechaY -= velocidadBarras * tiempoTranscurrido;
+		}
+
+
+
+
+
+
+
+	checarColisionesIzquierda();
+	checarColisionesSuperior();
+	checarColisionesDerecha();
+	checarColisionesInferior();
+	
+	
+
 
 	tiempoAnterior = tiempoActual;
 
 }
 
+void dibujarLimites()
+{
+	glPushMatrix();
+	glBegin(GL_QUADS);
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	//limiteSuperior
+	glVertex3f(-1.0f,0.95f,0.0f);
+	glVertex3f(-1.0f, 0.99f, 0.0f);
+	glVertex3f(1.0f, 0.99f, 0.0f);
+	glVertex3f(1.0f, 0.95f, 0.0f);
+	
+
+
+	glEnd();
+
+	glBegin(GL_QUADS);
+
+	//limiteInferior
+	
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+	glVertex3f(-1.0f, -0.95f, 0.0f);
+	glVertex3f(-1.0f, -0.99f, 0.0f);
+	glVertex3f(1.0f, -0.99f, 0.0f);
+	glVertex3f(1.0f, -0.95f, 0.0f);
+
+	glEnd();
+
+
+	glPopMatrix();
+}
+
 void dibujarHeroe() {
 	glPushMatrix();
-	glTranslatef(tx, ty, 0.0f);
-	glRotatef(angulo, 0.0f, 0.0f, 1.0f);
-	glScalef(0.08f, 0.08f, 0.08f);
-	glBegin(GL_TRIANGLES);//Inicia la rutina con un modo de dibujo
+	glTranslatef(0.0f, barraIzquierdaY, 0.0f);
 
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex3f(-1.0f, -0.5f, 0.0f);
 
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(0.0f, 0.5f, 0.0f);
+	glBegin(GL_QUADS);//Inicia la rutina con un modo de dibujo
 
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glVertex3f(1.0f, -0.5f, 0.0f);
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+	glVertex3f(-0.85f, -0.2f, 0.0f);
+	glVertex3f(-0.85f, 0.2f, 0.0f);
+	glVertex3f(-0.90f, 0.2f, 0.0f);
+	glVertex3f(-0.90f, -0.2f, 0.0f);
+
 
 
 	glEnd();//finaliza rutina
 	glPopMatrix();
 }
-
 
 void dibujarEnemigo() {
 	glPushMatrix();
-	glTranslatef(enemigoX, enemigoY, 0.0f);
+	glTranslatef(0.0f, barraDerechaY, 0.0f);
 
-	glScalef(0.08f, 0.08f, 0.08f);
-	glBegin(GL_TRIANGLES);//Inicia la rutina con un modo de dibujo
+	glBegin(GL_QUADS);//Inicia la rutina con un modo de dibujo
 
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(-1.0f, -0.5f, 0.0f);
-	glVertex3f(0.0f, 0.5f, 0.0f);
-	glVertex3f(1.0f, -0.5f, 0.0f);
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+	glVertex3f(0.85f, -0.2f, 0.0f);
+	glVertex3f(0.85f, 0.2f, 0.0f);
+	glVertex3f(0.90f, 0.2f, 0.0f);
+	glVertex3f(0.90f, -0.2f, 0.0f);
+
+
 
 
 	glEnd();//finaliza rutina
 	glPopMatrix();
 }
+
+void dibujarPelota()
+{
+	glPushMatrix();
+	glTranslatef(pelotaX, pelotaY, 0.0f);
+	glScalef(0.15f, 0.15f, 0.15f);
+	
+	glBegin(GL_POLYGON);
+
+		glColor3f(1.0f, 1.0f, 1.0f);
+
+	for (float i = 0; i < 360; i++)
+	{
+		glVertex3f(0.2*cos(i) + -0.79, 0.2*sin(i) + 0.4, 0.0f);
+
+	}
+
+	glEnd();
+
+	glPopMatrix();
+}
+
+
 
 
 void dibujar() {
 	dibujarHeroe();
 	dibujarEnemigo();
-
+	dibujarPelota();
+		dibujarLimites();
 }
 void key_callback(GLFWwindow* window, int key,
 	int scancode, int action, int mods)
 {
+
+	// iquierda
 	if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
-		if (ty < 0.9)
-			ty += 0.05;
+		if (barraIzquierdaY < 0.9)
+			barraIzquierdaY += 0.09;
 	}
 
 	if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
-		if (ty > -0.9)
-			ty -= 0.05f;
+		if (barraIzquierdaY > -0.9)
+			barraIzquierdaY -= 0.09f;
 	}
 
-	if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+	//derecha
+
+	if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
-		if (tx < 0.9)
-			tx += 0.05;
+		if (barraDerechaY < 0.9)
+			barraDerechaY += 0.09;
 	}
 
-	if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+	if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
-		if (tx > -0.9)
-			tx -= 0.05f;
+		if (barraDerechaY > -0.9)
+			barraDerechaY -= 0.09f;
 	}
+
+		
+
 }
 
 int main()
 {
 
 	//Propiedades de la ventana
-	GLfloat ancho = 1024;
-	GLfloat alto = 768;
+	GLfloat ancho = 1000;
+	GLfloat alto = 700;
 
 	//Inicializacion de GLFW
 	if (!glfwInit()) {
